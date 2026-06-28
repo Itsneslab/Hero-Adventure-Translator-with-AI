@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hero Adventure — Penerjemah Lokalisasi</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Rajdhani:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+:root {
+  --bg: #060610;
+  --bg2: #0c0c1e;
+  --bg3: #10103a;
+  --panel: #0d0d28;
+  --border: #1e1e50;
+  --border-glow: #2a2a80;
+  --neon-cyan: #00e5ff;
+  --neon-magenta: #ff00cc;
+  --neon-gold: #ffcc00;
+  --neon-green: #00ff88;
+  --text: #c8d0f0;
+  --text-muted: #5060a0;
+  --text-bright: #e8f0ff;
+  --danger: #ff4466;
+  --success: #00ff88;
+  --warning: #ffcc00;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 16px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,229,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,229,255,0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+.page-container {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px 80px;
+}
+header {
+  text-align: center;
+  padding: 44px 0 28px;
+}
+.logo-emblem {
+  font-size: 36px;
+  margin-bottom: 10px;
+  letter-spacing: 12px;
+}
+.logo-text {
+  font-family: 'Cinzel', serif;
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: 5px;
+  background: linear-gradient(135deg, #ffcc00 0%, #00e5ff 50%, #ff00cc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.1;
+}
+.logo-sub {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 8px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-top: 10px;
+}
+.header-line {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--neon-cyan), var(--neon-magenta), transparent);
+  margin-top: 28px;
+  opacity: 0.35;
+}
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 22px 26px;
+  margin-bottom: 18px;
+  position: relative;
+  overflow: hidden;
+}
+.panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--neon-cyan), transparent 40%, transparent 60%, var(--neon-magenta));
+  opacity: 0.5;
+}
+.panel-title {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--neon-cyan);
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.panel-title-icon {
+  width: 18px; height: 18px; flex-shrink: 0;
+}
+.api-grid { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.api-input, .model-select {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-bright);
+  padding: 10px 16px;
+  outline: none;
+  transition: border-color 0.2s;
+  font-size: 14px;
+}
+.api-input {
+  flex: 1;
+  min-width: 220px;
+  font-family: 'Share Tech Mono', monospace;
+}
+.api-input:focus, .model-select:focus { border-color: var(--neon-cyan); }
+.model-select {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+}
+.api-hint { font-size: 12px; color: var(--text-muted); margin-top: 10px; line-height: 1.6; }
+.api-hint em { color: var(--neon-gold); font-style: normal; }
+.api-hint a { color: var(--neon-cyan); text-decoration: none; }
+.drop-zone {
+  border: 2px dashed var(--border-glow);
+  border-radius: 12px;
+  padding: 50px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s;
+  background: var(--bg2);
+}
+.drop-zone.drag-over {
+  border-color: var(--neon-cyan);
+  background: rgba(0,229,255,0.05);
+}
+.drop-icon { width: 56px; height: 56px; margin: 0 auto 18px; color: var(--neon-cyan); opacity: 0.5; }
+.drop-title { font-family: 'Cinzel', serif; font-size: 18px; color: var(--text-bright); margin-bottom: 8px; }
+.drop-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; }
+.drop-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border-radius: 6px;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.btn:disabled { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
+.btn-cyan { background: rgba(0,229,255,0.08); border-color: var(--neon-cyan); color: var(--neon-cyan); }
+.btn-cyan:hover { background: rgba(0,229,255,0.18); box-shadow: 0 0 18px rgba(0,229,255,0.25); }
+.btn-magenta { background: rgba(255,0,204,0.08); border-color: var(--neon-magenta); color: var(--neon-magenta); }
+.btn-magenta:hover { background: rgba(255,0,204,0.18); box-shadow: 0 0 18px rgba(255,0,204,0.25); }
+.btn-gold { background: rgba(255,204,0,0.08); border-color: var(--neon-gold); color: var(--neon-gold); }
+.btn-gold:hover { background: rgba(255,204,0,0.18); box-shadow: 0 0 18px rgba(255,204,0,0.25); }
+.btn-green { background: rgba(0,255,136,0.08); border-color: var(--neon-green); color: var(--neon-green); }
+.btn-green:hover { background: rgba(0,255,136,0.18); box-shadow: 0 0 18px rgba(0,255,136,0.25); }
+.btn-sm { padding: 6px 14px; font-size: 12px; }
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.stat-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  text-align: center;
+}
+.stat-val {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 26px;
+  color: var(--neon-cyan);
+  line-height: 1;
+}
+.stat-label {
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+.controls-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 18px; }
+.progress-wrap { margin-bottom: 16px; }
+.prog-bar-outer {
+  height: 3px;
+  background: var(--bg3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.prog-bar-inner {
+  height: 100%;
+  background: linear-gradient(90deg, var(--neon-cyan), var(--neon-magenta));
+  width: 0%;
+  transition: width 0.3s;
+}
+.prog-text { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
+.file-list { display: flex; flex-direction: column; gap: 8px; }
+.file-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  transition: border-color 0.2s;
+}
+.file-item.done { border-color: rgba(0,255,136,0.25); }
+.file-item.error { border-color: rgba(255,68,102,0.25); }
+.file-item.processing { border-color: rgba(0,229,255,0.25); }
+.file-icon-wrap { color: var(--neon-gold); flex-shrink: 0; }
+.file-name { flex: 1; font-weight: 500; font-size: 14px; color: var(--text-bright); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.file-rows { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+.badge {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.badge-pending { background: rgba(80,96,160,0.2); color: var(--text-muted); }
+.badge-processing { background: rgba(0,229,255,0.12); color: var(--neon-cyan); }
+.badge-done { background: rgba(0,255,136,0.12); color: var(--neon-green); }
+.badge-error { background: rgba(255,68,102,0.12); color: var(--danger); }
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 5px;
+  border-radius: 4px;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  line-height: 1;
+}
+.icon-btn:hover { color: var(--neon-gold); }
+.icon-btn.dl:hover { color: var(--neon-cyan); }
+.icon-btn.remove:hover { color: var(--danger); }
+.review-tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); padding-bottom: 1px; margin-bottom: 18px; }
+.rev-tab {
+  padding: 8px 22px;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s;
+}
+.rev-tab.active { color: var(--neon-cyan); border-bottom-color: var(--neon-cyan); }
+.review-top { display: flex; gap: 12px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+.file-sel {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-bright);
+  padding: 8px 14px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px;
+  flex: 1;
+  min-width: 0;
+  max-width: 380px;
+}
+.search-input {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-bright);
+  padding: 8px 14px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px;
+  width: 220px;
+  outline: none;
+}
+.search-input:focus { border-color: var(--neon-cyan); }
+.table-wrap {
+  max-height: 520px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.table-wrap::-webkit-scrollbar { width: 5px; }
+.table-wrap::-webkit-scrollbar-track { background: var(--bg2); }
+.table-wrap::-webkit-scrollbar-thumb { background: var(--border-glow); border-radius: 3px; }
+.rev-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.rev-table th {
+  background: var(--bg3);
+  padding: 10px 14px;
+  text-align: left;
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--neon-cyan);
+  text-transform: uppercase;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  border-bottom: 1px solid var(--border);
+}
+.rev-table td {
+  padding: 8px 14px;
+  border-bottom: 1px solid rgba(30,30,80,0.6);
+  vertical-align: top;
+  line-height: 1.5;
+  word-break: break-word;
+}
+.rev-table tr:hover td { background: rgba(0,229,255,0.025); }
+.td-num { color: var(--text-muted); font-family: 'Share Tech Mono', monospace; font-size: 11px; }
+.td-name { color: var(--text-muted); font-family: 'Share Tech Mono', monospace; font-size: 11px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
+.td-cn { color: var(--text-muted); font-size: 12px; }
+.td-original { color: var(--text); }
+.td-translated { color: var(--neon-green); }
+.td-skip { color: var(--text-muted); font-style: italic; font-size: 11px; }
+.skip-reason {
+  display: inline-block;
+  font-size: 10px;
+  background: rgba(80,96,160,0.2);
+  color: var(--text-muted);
+  padding: 1px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+  margin-left: 4px;
+}
+.notif {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 9999;
+  max-width: 380px;
+  transform: translateX(130%);
+  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.notif.show { transform: translateX(0); }
+.notif.success { border-color: var(--neon-green); color: var(--neon-green); }
+.notif.error { border-color: var(--danger); color: var(--danger); }
+.notif.info { border-color: var(--neon-cyan); color: var(--neon-cyan); }
+@keyframes blink { 0%,100%{opacity:1}50%{opacity:0.4} }
+.blinker {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--neon-cyan);
+  flex-shrink: 0;
+  animation: blink 1s infinite;
+}
+input[type="file"] { display: none; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+.empty-msg { text-align: center; padding: 40px; color: var(--text-muted); font-size: 14px; }
+.filter-row { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.filter-btn {
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  color: var(--text-muted);
+  transition: all 0.15s;
+  text-transform: uppercase;
+}
+.filter-btn.active { border-color: var(--neon-cyan); color: var(--neon-cyan); background: rgba(0,229,255,0.08); }
+</style>
+</head>
+<body>
+<div class="page-container">
+
+<header>
+  <div class="logo-emblem">⚔&nbsp;&nbsp;&nbsp;&nbsp;⚔</div>
+  <div class="logo-text">HERO ADVENTURE</div>
+  <div class="logo-sub">Language Mod Translator &nbsp;·&nbsp; Sistem Lokalisasi Indonesia</div>
+  <div class="header-line"></div>
+</header>
+
+<!-- API Panel -->
+<div class="panel">
+  <div class="panel-title">
+    <svg class="panel-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+    Konfigurasi API — Xiaomi MiMo
+  </div>
+  <div class="api-grid">
+    <input type="password" class="api-input" id="apiKey" placeholder="Masukkan API Key Mimo (ak-xxxxxxxx...)">
+    <select class="model-select" id="modelSelect">
+      <option value="mimo-v2.5">⭐ mimo-v2.5 — Hemat &amp; Cepat (REKOMENDASI)</option>
+      <option value="mimo-v2.5-pro">🏆 mimo-v2.5-pro — Paling Kuat</option>
+      <option value="mimo-v2-omni">🌐 mimo-v2-omni — Multimodal</option>
+    </select>
+  </div>
+  <div class="api-hint">
+    Endpoint: <em>https://api.xiaomimimo.com/v1</em> &nbsp;|&nbsp;
+    Dapatkan API Key di <a href="https://platform.xiaomimimo.com" target="_blank">platform.xiaomimimo.com</a>
+    <br>
+    💡 <em>mimo-v2.5</em> hanya $0.14/juta token input — dengan $2 kamu bisa terjemahkan puluhan ribu baris teks game!
+    <br>
+    ⚠ Jika CORS error, coba buka file ini lewat server lokal (contoh: <em>npx serve .</em>)
+  </div>
+</div>
+
+<!-- Drop Zone -->
+<div class="panel">
+  <div class="panel-title">
+    <svg class="panel-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    Unggah File XLSX ModEditor
+  </div>
+  <div class="drop-zone" id="dropZone">
+    <div class="drop-icon">
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="8" y="14" width="48" height="40" rx="5"/>
+        <path d="M32 24v16M22 34l10-10 10 10"/>
+        <path d="M16 46h32"/>
+        <rect x="12" y="6" width="40" height="40" rx="5" stroke-dasharray="4 3" opacity="0.35"/>
+      </svg>
+    </div>
+    <div class="drop-title">Drag &amp; Drop File atau Folder di Sini</div>
+    <div class="drop-sub">Mendukung banyak file sekaligus · Hanya file .xlsx dari folder ModEditor/Assets/GameRes/xls/3</div>
+    <div class="drop-btns">
+      <button class="btn btn-cyan" onclick="document.getElementById('fileInput').click()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Pilih File
+      </button>
+      <button class="btn btn-magenta" onclick="document.getElementById('folderInput').click()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        Pilih Folder
+      </button>
+    </div>
+  </div>
+  <input type="file" id="fileInput" multiple accept=".xlsx">
+  <input type="file" id="folderInput" webkitdirectory multiple accept=".xlsx">
+</div>
+
+<!-- File List Panel -->
+<div class="panel" id="fileListPanel" style="display:none">
+  <div class="panel-title">
+    <svg class="panel-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+    Daftar File
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-val" id="stTotal">0</div>
+      <div class="stat-label">Total File</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="stRows">0</div>
+      <div class="stat-label">Baris Terjemah</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="stSkip">0</div>
+      <div class="stat-label">Dilewati</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="stDone">0</div>
+      <div class="stat-label">Selesai</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="stPct">0%</div>
+      <div class="stat-label">Progress</div>
+    </div>
+  </div>
+
+  <div class="controls-bar">
+    <button class="btn btn-green" id="btnTranslate" onclick="startTranslation()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      Terjemahkan Semua
+    </button>
+    <button class="btn btn-gold" id="btnZip" onclick="downloadZip()" disabled>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Download Semua (.ZIP)
+    </button>
+    <button class="btn btn-magenta btn-sm" onclick="clearAll()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+      Hapus Semua
+    </button>
+    <div style="display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <label style="font-size:12px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;white-space:nowrap;">Batch</label>
+        <select id="batchSize" class="model-select" style="padding:6px 10px;font-size:13px;" title="Jumlah baris per request API. Kecilkan jika sering error finish_reason:length">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="5" selected>5</option>
+          <option value="8">8</option>
+          <option value="10">10</option>
+          <option value="15">15</option>
+          <option value="20">20</option>
+          <option value="30">30</option>
+          <option value="50">50</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <label style="font-size:12px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;white-space:nowrap;">Max Tokens</label>
+        <select id="maxTokens" class="model-select" style="padding:6px 10px;font-size:13px;" title="Batas token output per request. Naikkan jika batch besar">
+          <option value="512">512</option>
+          <option value="1024">1024</option>
+          <option value="2048">2048</option>
+          <option value="4096">4096</option>
+          <option value="8192" selected>8192</option>
+          <option value="12288">12288</option>
+          <option value="16384">16384</option>
+          <option value="32768">32768</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div id="progWrap" style="display:none; margin-bottom:16px;">
+    <div class="prog-bar-outer"><div class="prog-bar-inner" id="progBar"></div></div>
+    <div class="prog-text" id="progText">Mempersiapkan...</div>
+  </div>
+
+  <div class="file-list" id="fileList"></div>
+</div>
+
+<!-- Review Panel -->
+<div class="panel" id="reviewPanel" style="display:none">
+  <div class="panel-title">
+    <svg class="panel-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+    Review Terjemahan
+  </div>
+
+  <div class="review-tabs">
+    <button class="rev-tab active" id="tabBefore" onclick="setTab('before')">Sebelum Terjemah</button>
+    <button class="rev-tab" id="tabAfter" onclick="setTab('after')">Sesudah Terjemah</button>
+  </div>
+
+  <div class="review-top">
+    <select class="file-sel" id="revFileSel" onchange="renderReview()"></select>
+    <input class="search-input" id="revSearch" placeholder="Cari teks..." oninput="renderReview()">
+  </div>
+  <div class="filter-row">
+    <button class="filter-btn active" data-filter="all" onclick="setFilter('all',this)">Semua</button>
+    <button class="filter-btn" data-filter="translate" onclick="setFilter('translate',this)">Diterjemahkan</button>
+    <button class="filter-btn" data-filter="skip" onclick="setFilter('skip',this)">Dilewati</button>
+  </div>
+
+  <div class="table-wrap">
+    <table class="rev-table">
+      <thead>
+        <tr>
+          <th style="width:40px">#</th>
+          <th style="width:160px">Nama Internal</th>
+          <th style="width:35%">Mandarin (Asli)</th>
+          <th>Inggris / Indonesia</th>
+        </tr>
+      </thead>
+      <tbody id="revBody"></tbody>
+    </table>
+  </div>
+  <div style="font-size:12px; color:var(--text-muted); margin-top:10px;" id="revCount"></div>
+</div>
+
+</div><!-- end page-container -->
+
+<!-- Notification -->
+<div class="notif" id="notif">
+  <div class="blinker" id="notifDot" style="display:none"></div>
+  <span id="notifMsg"></span>
+</div>
+
+<script>
+const GAME_ABBREVS = new Set(['HP','MP','ATK','DEF','STR','INT','LUK','DEX','EXP','EQ','OK','ID','SP','PP','CP','EP','DP','AG','SPD','RES']);
+
+const state = {
+  files: [],
+  tab: 'before',
+  filter: 'all',
+  translating: false,
+  totalUnits: 0,
+  doneUnits: 0
+};
+
+// ===================== SKIP LOGIC =====================
+function shouldSkip(eng, cn) {
+  if (!eng || typeof eng !== 'string') return { skip: true, reason: 'kosong' };
+  const t = eng.trim();
+  if (!t) return { skip: true, reason: 'kosong' };
+  if (/^[\d\s\/\-+.,;:!?@#$^&*()\[\]{}|<>=%~`'"°·•…—×÷]+$/.test(t))
+    return { skip: true, reason: 'angka/simbol' };
+  if (GAME_ABBREVS.has(t.toUpperCase()))
+    return { skip: true, reason: 'singkatan game' };
+  if (cn && t === cn.trim())
+    return { skip: true, reason: 'sama dgn CN (nama)' };
+  // Only color codes / placeholders
+  if (/^[\s]*(<#[0-9A-Fa-f]{6}>|<\/color>|\{[^}]{0,20}\}|%|\s)+[\s]*$/.test(t))
+    return { skip: true, reason: 'kode/placeholder' };
+  // Already translated to Indonesian
+  if (isAlreadyIndonesian(t))
+    return { skip: true, reason: 'sudah Indonesia' };
+  return { skip: false, reason: '' };
+}
+
+function isAlreadyIndonesian(text) {
+  // Only words that are uniquely Indonesian — will NEVER appear in English game text
+  const idWords = [
+    'serangan','pertahanan','pertempuran','diserang','menyerang',
+    'musuh','sekutu','berkurang','meningkat','memasuki','mengurangi',
+    'kemungkinan','kecepatan','kerusakan','perlindungan',
+    'bertahan','menerima','menggunakan','diperoleh','ditambahkan',
+    'digunakan','berlangsung','bertindak','bergerak',
+    'menyebabkan','menimbulkan','memicu','terkena',
+    'saat menyerang','saat diserang','saat memasuki',
+    'tidak dapat','tidak bisa','langsung pulih',
+    'terikat dengan','kehilangan akal','tidak ada'
+  ];
+  const lower = text.toLowerCase();
+  return idWords.some(w => lower.includes(w));
+}
+
+
+function findEnglishCols(headerRow) {
+  const res = { english: -1, backup: -1, chinese: -1, name: -1 };
+  if (!headerRow) return res;
+  headerRow.forEach((h, i) => {
+    const s = String(h || '').trim();
+    if (s === '英文备份' || s.toLowerCase().includes('english backup') || s.toLowerCase().includes('englishbackup'))
+      res.backup = i;
+    else if (s === '英文' || s.toLowerCase() === 'english')
+      res.english = i;
+    if (s === '简体中文' || s.toLowerCase() === 'schinese')
+      res.chinese = i;
+    if (s === '名称（表内唯一）' || s.toLowerCase() === 'uname' || s === '名称')
+      res.name = i;
+  });
+  return res;
+}
+
+function parseXlsx(buffer) {
+  try {
+    const wb = XLSX.read(buffer, { type: 'array' });
+    const sheets = {};
+    for (const sn of wb.SheetNames) {
+      const ws = wb.Sheets[sn];
+      const rawRows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: '' });
+      if (!rawRows || rawRows.length < 3) continue;
+
+      const headerRow = rawRows[0];
+      const cols = findEnglishCols(headerRow);
+      if (cols.english === -1 && cols.backup === -1) continue;
+
+      // Find data start: detect rows with 'uid'/'int'/'string' = header rows
+      let dataStart = 1;
+      for (let r = 1; r < Math.min(6, rawRows.length); r++) {
+        const v = String(rawRows[r][1] || '').toLowerCase().trim();
+        if (v === 'uid' || v === 'int' || v === 'string') dataStart = r + 1;
+      }
+
+      const entries = [];
+      for (let r = dataStart; r < rawRows.length; r++) {
+        const row = rawRows[r];
+        const cn = cols.chinese >= 0 ? String(row[cols.chinese] || '') : '';
+        const nm = cols.name >= 0 ? String(row[cols.name] || '') : '';
+
+        const addEntry = (colIdx, colType) => {
+          const text = String(row[colIdx] || '');
+          const { skip, reason } = shouldSkip(text, cn);
+          entries.push({ rowIndex: r, colIndex: colIdx, colType, original: text, chinese: cn, name: nm, translated: null, skip, reason });
+        };
+
+        if (cols.english >= 0) addEntry(cols.english, 'english');
+        if (cols.backup >= 0) addEntry(cols.backup, 'backup');
+      }
+
+      const toTranslate = entries.filter(e => !e.skip).length;
+      const skipped = entries.filter(e => e.skip).length;
+      sheets[sn] = { rawRows, cols, entries, toTranslate, skipped };
+    }
+    return { wb, sheets };
+  } catch (ex) {
+    console.error('parseXlsx error:', ex);
+    return null;
+  }
+}
+
+// ===================== FILE HANDLING =====================
+function addFiles(files) {
+  let added = 0;
+  const arr = Array.from(files).filter(f => f.name.endsWith('.xlsx'));
+  for (const f of arr) {
+    if (state.files.some(x => x.name === f.name)) continue;
+    const entry = { name: f.name, status: 'pending', parsedData: null, outBuffer: null, errorMsg: '' };
+    state.files.push(entry);
+    added++;
+    const reader = new FileReader();
+    reader.onload = e => {
+      entry.originalBuffer = e.target.result;
+      const arr8 = new Uint8Array(e.target.result);
+      entry.parsedData = parseXlsx(arr8);
+      renderAll();
+    };
+    reader.readAsArrayBuffer(f);
+  }
+  if (added === 0) showNotif('Tidak ada file XLSX baru', 'info');
+  else { showNotif(`${added} file ditambahkan`, 'success'); renderAll(); }
+}
+
+function removeFile(i) {
+  state.files.splice(i, 1);
+  renderAll();
+}
+
+function clearAll() {
+  if (state.translating) return;
+  state.files = [];
+  renderAll();
+}
+
+// ===================== UI RENDER =====================
+function renderAll() {
+  const panel = document.getElementById('fileListPanel');
+  const revPanel = document.getElementById('reviewPanel');
+  if (!state.files.length) {
+    panel.style.display = 'none';
+    revPanel.style.display = 'none';
+    return;
+  }
+  panel.style.display = 'block';
+
+  let totalR = 0, totalS = 0, totalD = 0;
+  for (const f of state.files) {
+    if (f.parsedData) {
+      for (const s of Object.values(f.parsedData.sheets)) {
+        totalR += s.toTranslate;
+        totalS += s.skipped;
+      }
+    }
+    if (f.status === 'done') totalD++;
+  }
+
+  document.getElementById('stTotal').textContent = state.files.length;
+  document.getElementById('stRows').textContent = totalR.toLocaleString();
+  document.getElementById('stSkip').textContent = totalS.toLocaleString();
+  document.getElementById('stDone').textContent = totalD;
+  const pct = state.totalUnits > 0 ? Math.round(state.doneUnits / state.totalUnits * 100) : 0;
+  document.getElementById('stPct').textContent = pct + '%';
+
+  const list = document.getElementById('fileList');
+  list.innerHTML = state.files.map((f, i) => {
+    const cls = f.status === 'done' ? 'done' : f.status === 'error' ? 'error' : f.status === 'processing' ? 'processing' : '';
+    const badgeCls = `badge badge-${f.status === 'done' ? 'done' : f.status === 'error' ? 'error' : f.status === 'processing' ? 'processing' : 'pending'}`;
+    const badgeTxt = f.status === 'done' ? '✓ Selesai' : f.status === 'error' ? '✗ Error' : f.status === 'processing' ? '⟳ Proses' : '○ Antri';
+    let rows = '';
+    if (f.parsedData) {
+      let tot = 0; for (const s of Object.values(f.parsedData.sheets)) tot += s.toTranslate;
+      rows = `${tot.toLocaleString()} baris`;
+    }
+    const dlShow = f.status === 'done' ? '' : 'display:none';
+    return `<div class="file-item ${cls}">
+      <div class="file-icon-wrap">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      </div>
+      <div class="file-name" title="${esc(f.name)}">${esc(f.name)}</div>
+      <div class="file-rows">${rows}</div>
+      <span class="${badgeCls}">${badgeTxt}</span>
+      <button class="icon-btn dl" style="${dlShow}" onclick="downloadOne(${i})" title="Download file ini">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </button>
+      <button class="icon-btn remove" onclick="removeFile(${i})" title="Hapus">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>`;
+  }).join('');
+
+  // Review panel
+  if (state.files.some(f => f.parsedData)) {
+    revPanel.style.display = 'block';
+    const sel = document.getElementById('revFileSel');
+    const curVal = sel.value;
+    sel.innerHTML = state.files.map((f, i) => `<option value="${i}">${f.name}</option>`).join('');
+    if (curVal) sel.value = curVal;
+    renderReview();
+  }
+}
+
+function setTab(t) {
+  state.tab = t;
+  document.getElementById('tabBefore').className = 'rev-tab' + (t === 'before' ? ' active' : '');
+  document.getElementById('tabAfter').className = 'rev-tab' + (t === 'after' ? ' active' : '');
+  renderReview();
+}
+
+function setFilter(f, btn) {
+  state.filter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderReview();
+}
+
+function renderReview() {
+  const sel = document.getElementById('revFileSel');
+  if (!sel.value && sel.value !== '0') return;
+  const fi = parseInt(sel.value);
+  const file = state.files[fi];
+  if (!file || !file.parsedData) return;
+
+  const search = (document.getElementById('revSearch').value || '').toLowerCase();
+  const tbody = document.getElementById('revBody');
+  const rows = [];
+  let num = 1;
+  let shown = 0;
+
+  for (const [sn, sd] of Object.entries(file.parsedData.sheets)) {
+    // Group entries by row
+    const rowMap = new Map();
+    for (const e of sd.entries) {
+      if (!rowMap.has(e.rowIndex)) rowMap.set(e.rowIndex, []);
+      rowMap.get(e.rowIndex).push(e);
+    }
+
+    for (const entries of rowMap.values()) {
+      for (const entry of entries) {
+        if (state.filter === 'translate' && entry.skip) continue;
+        if (state.filter === 'skip' && !entry.skip) continue;
+        if (search && !entry.original.toLowerCase().includes(search) &&
+            !entry.chinese.toLowerCase().includes(search) &&
+            !entry.name.toLowerCase().includes(search) &&
+            !(entry.translated || '').toLowerCase().includes(search)) continue;
+
+        const name = entry.name.substring(0, 24);
+        const cnDisp = esc(entry.chinese.substring(0, 80));
+        shown++;
+
+        if (entry.skip) {
+          rows.push(`<tr>
+            <td class="td-num">${num++}</td>
+            <td class="td-name" title="${esc(entry.name)}">${esc(name)}</td>
+            <td class="td-cn">${cnDisp}</td>
+            <td class="td-skip">— dilewati <span class="skip-reason">${entry.reason}</span></td>
+          </tr>`);
+        } else {
+          let cell;
+          if (state.tab === 'after' && entry.translated) {
+            cell = `<span class="td-translated">${esc(entry.translated)}</span>`;
+          } else {
+            cell = `<span class="td-original">${esc(entry.original)}</span>`;
+          }
+          rows.push(`<tr>
+            <td class="td-num">${num++}</td>
+            <td class="td-name" title="${esc(entry.name)}">${esc(name)}</td>
+            <td class="td-cn">${cnDisp}</td>
+            <td>${cell}</td>
+          </tr>`);
+        }
+      }
+    }
+  }
+
+  tbody.innerHTML = rows.join('') || `<tr><td colspan="4" class="empty-msg">Tidak ada baris yang cocok</td></tr>`;
+  document.getElementById('revCount').textContent = `Menampilkan ${shown.toLocaleString()} baris`;
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ===================== TRANSLATION =====================
+function parseJsonArray(content, expectedLen) {
+  // Strategy 1: direct parse if already clean
+  try {
+    const direct = JSON.parse(content);
+    if (Array.isArray(direct)) return direct;
+  } catch(e) {}
+
+  // Strategy 2: strip markdown code fences then parse
+  const stripped = content.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
+  try {
+    const clean = JSON.parse(stripped);
+    if (Array.isArray(clean)) return clean;
+  } catch(e) {}
+
+  // Strategy 3: greedy regex to find outermost [ ... ]
+  const m = stripped.match(/\[[\s\S]*\]/);
+  if (m) {
+    try {
+      const arr = JSON.parse(m[0]);
+      if (Array.isArray(arr)) return arr;
+    } catch(e) {}
+  }
+
+  // Strategy 4: extract each "..." quoted string line by line (fallback for malformed JSON)
+  const lines = content.split('\n');
+  const results = [];
+  for (const line of lines) {
+    const lm = line.match(/^\s*\d*\s*[.):|\-]?\s*"((?:[^"\\]|\\.)*)"\s*,?\s*$/);
+    if (lm) results.push(lm[1].replace(/\\"/g, '"').replace(/\\\\/g, '\\'));
+  }
+  if (results.length === expectedLen) return results;
+
+  // Strategy 5: try to fix trailing comma issues
+  try {
+    const fixed = stripped.replace(/,\s*]/g, ']').replace(/,\s*}/g, '}');
+    const arr = JSON.parse(fixed);
+    if (Array.isArray(arr)) return arr;
+  } catch(e) {}
+
+  throw new Error(`Respons tidak mengandung JSON array valid. Preview: ${content.substring(0, 120)}`);
+}
+
+
+// ===================== POST-PROCESS =====================
+// Kata-kata Inggris yang wajib diterjemahkan (bukan singkatan)
+const WORD_TRANSLATE = {
+  'attack': 'Serangan', 'defense': 'Pertahanan', 'defence': 'Pertahanan',
+  'damage': 'Kerusakan', 'heal': 'Pulih', 'healing': 'Pemulihan',
+  'regen': 'Regenerasi', 'regeneration': 'Regenerasi',
+  'speed': 'Kecepatan', 'movement': 'Pergerakan', 'range': 'Jangkauan',
+  'health': 'Kesehatan', 'stamina': 'Stamina', 'poison': 'Racun',
+  'bleeding': 'Pendarahan', 'blind': 'Buta', 'blinded': 'Buta',
+  'stun': 'Pingsan', 'stunned': 'Dipingsan', 'charge': 'Tahan',
+  'counter': 'Konter', 'block': 'Blokir', 'dodge': 'Menghindar',
+  'critical': 'Kritis', 'accuracy': 'Akurasi', 'evasion': 'Penghindaran',
+  'buff': 'Buff', 'debuff': 'Debuff', 'effect': 'Efek', 'status': 'Status',
+  'duration': 'Durasi', 'cooldown': 'Cooldown', 'skill': 'Skill',
+  'passive': 'Pasif', 'active': 'Aktif', 'battle': 'Pertempuran',
+  'combat': 'Pertempuran', 'action': 'Aksi', 'turn': 'Giliran',
+  'round': 'Putaran', 'target': 'Target', 'ally': 'Sekutu',
+  'enemy': 'Musuh', 'leader': 'Pemimpin', 'boss': 'Boss',
+  'max': 'Maks', 'minimum': 'Minimum', 'minimum': 'Minimum',
+  'increase': 'meningkat', 'increases': 'meningkat', 'increased': 'ditingkatkan',
+  'decrease': 'berkurang', 'decreases': 'berkurang', 'decreased': 'dikurangi',
+  'reduce': 'mengurangi', 'reduces': 'mengurangi', 'reduced': 'dikurangi',
+  'inflict': 'menimbulkan', 'inflicts': 'menimbulkan',
+  'trigger': 'memicu', 'triggers': 'memicu', 'triggered': 'terpicu',
+  'recover': 'pulih', 'recovery': 'pemulihan', 'restore': 'memulihkan',
+  'pierce': 'menembus', 'ignore': 'mengabaikan', 'ignores': 'mengabaikan',
+  'lasts': 'bertahan', 'last': 'bertahan', 'until': 'hingga',
+  'next': 'berikutnya', 'previous': 'sebelumnya', 'current': 'saat ini',
+  'final': 'akhir', 'total': 'total', 'base': 'dasar', 'bonus': 'bonus',
+  'chance': 'peluang', 'probability': 'probabilitas', 'random': 'acak',
+  'point': 'poin', 'points': 'poin', 'percent': '%', 'percentage': '%',
+  'receive': 'menerima', 'received': 'diterima', 'when': 'saat',
+  'after': 'setelah', 'before': 'sebelum', 'during': 'selama',
+  'enter': 'memasuki', 'enters': 'memasuki', 'exit': 'keluar',
+  'use': 'menggunakan', 'uses': 'menggunakan', 'used': 'digunakan',
+  'gain': 'mendapatkan', 'gains': 'mendapatkan', 'lose': 'kehilangan',
+  'loses': 'kehilangan', 'lost': 'hilang', 'add': 'tambahkan',
+  'remove': 'hapus', 'clear': 'bersihkan', 'reset': 'reset',
+  'immune': 'kebal', 'immunity': 'kekebalan', 'resist': 'menahan',
+  'resistance': 'Ketahanan', 'armor': 'Armor', 'shield': 'Perisai',
+  'weapon': 'Senjata', 'disarm': 'Melucuti', 'disable': 'Menonaktifkan',
+  'knock': 'memukul', 'push': 'mendorong', 'pull': 'menarik',
+  'silence': 'membungkam', 'bind': 'mengikat', 'immobilize': 'mengimobilisasi',
+  'slow': 'memperlambat', 'haste': 'mempercepat', 'invisible': 'tak terlihat',
+  'revive': 'menghidupkan kembali', 'kill': 'membunuh', 'defeat': 'mengalahkan',
+  'victory': 'kemenangan', 'defeat': 'kekalahan',
+  'obtain': 'memperoleh', 'obtained': 'diperoleh', 'acquire': 'mendapatkan',
+  'apply': 'menerapkan', 'applied': 'diterapkan', 'stack': 'menumpuk',
+  'expire': 'kedaluwarsa', 'expires': 'kedaluwarsa', 'refresh': 'diperbarui',
+};
+
+function postProcess(text) {
+  if (!text) return text;
+
+  // Fix: "Status <#color>{N}</color>" → "<#color>{N}</color> Status"
+  text = text.replace(
+    /\bStatus\s+(<#[0-9A-Fa-f]{6}>)(\{[^}]+\})(<\/color>)/g,
+    function(match, colorOpen, placeholder, colorClose) {
+      return colorOpen + placeholder + colorClose + ' Status';
+    }
+  );
+
+  // Fix: "<#color>{N}</color>" tanpa "Status" di belakang → tambah "Status"
+  // {N} = placeholder nama status, selalu perlu kata "Status"
+  text = text.replace(
+    /(<#[0-9A-Fa-f]{6}>)(\{[^}]+\})(<\/color>)(?!\s*Status)/g,
+    function(match, colorOpen, placeholder, colorClose) {
+      return colorOpen + placeholder + colorClose + ' Status';
+    }
+  );
+
+  // Pisah teks jadi segmen: teks biasa | tag warna | placeholder
+  var parts = [];
+  var tagRegex = /(<#[0-9A-Fa-f]{6}>)([\s\S]*?)(<\/color>)|(\{[^}]{0,30}\})/g;
+  var last = 0, m;
+  while ((m = tagRegex.exec(text)) !== null) {
+    if (m.index > last) parts.push({ t: 'text', v: text.slice(last, m.index) });
+    if (m[4]) {
+      parts.push({ t: 'raw', v: m[0] });
+    } else {
+      var inner = m[2];
+      if (!/\{[^}]+\}/.test(inner)) inner = translateWords(inner);
+      parts.push({ t: 'raw', v: m[1] + inner + m[3] });
+    }
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) parts.push({ t: 'text', v: text.slice(last) });
+
+  text = parts.map(function(p) {
+    if (p.t === 'raw') return p.v;
+    return translateWords(p.v);
+  }).join('');
+
+  return text;
+}
+
+function translateWords(text) {
+  return text.replace(/\b([a-zA-Z]{3,})\b/g, function(word) {
+    var lower = word.toLowerCase();
+    if (WORD_TRANSLATE[lower]) {
+      var tr = WORD_TRANSLATE[lower];
+      if (word[0] >= 'A' && word[0] <= 'Z') {
+        return tr.charAt(0).toUpperCase() + tr.slice(1);
+      }
+      return tr;
+    }
+    return word;
+  });
+}
+
+
+async function callMimo(texts, apiKey, model) {
+  const sys = `Kamu adalah translator lokalisasi game profesional. Terjemahkan teks bahasa Inggris ke bahasa Indonesia yang natural dan sesuai konteks game RPG/Wuxia.
+
+ATURAN WAJIB:
+1. Pertahankan PERSIS kode warna <#RRGGBB> dan </color> — posisinya TIDAK BOLEH berubah
+2. Pertahankan PERSIS placeholder: {0}, {1}, {val}, {lockey}, {lockey2}, dll.
+3. JANGAN terjemahkan singkatan: HP, MP, ATK, DEF, STR, INT, LUK, DEX, EXP, EQ, OK, ID, SP, EP, DP, AG, SPD
+4. JANGAN terjemahkan nama orang, nama tempat, nama sekte/perguruan/klan
+5. Kata bahasa Inggris umum WAJIB diterjemahkan: attack→Serangan, defense→Pertahanan, damage→Kerusakan, heal→Pulih, status→Status, effect→Efek, speed→Kecepatan, poison→Racun, blind→Buta, stun→Pingsan, charge→Tahan, armor→Armor, chance→Peluang, dll.
+6. POSISI COLOR TAG: tag warna harus membungkus NAMA STATUS/NILAI — bukan kata "status" atau "efek"
+   BENAR:   "{0} mendapatkan <#FE2929>Keracunan</color>"
+   SALAH:   "{0} mendapatkan Keracunan <#FE2929>status</color>"
+   BENAR:   "Kerusakan <#29F161>meningkat 10%</color>"
+   SALAH:   "Kerusakan meningkat 10% <#29F161></color>"
+7. WAJIB output HANYA JSON array of strings — tidak ada teks lain, tidak ada markdown
+8. Jumlah elemen output HARUS SAMA PERSIS dengan input
+
+Contoh:
+Input:  ["Inflict <#FE2929>Poisoned</color> on enemy", "{0} gains <#29F161>Attack</color> status"]
+Output: ["Menimbulkan <#FE2929>Keracunan</color> pada musuh", "{0} mendapatkan <#29F161>Serangan</color>"]`;
+
+  const body = JSON.stringify({
+    model,
+    messages: [
+      { role: 'system', content: sys },
+      { role: 'user', content: `Terjemahkan array berikut ke Bahasa Indonesia:\n${JSON.stringify(texts)}\n\nJSON array hasil terjemahan:` }
+    ],
+    max_tokens: parseInt(document.getElementById('maxTokens').value) || 8192,
+    temperature: 0.1
+  });
+
+  const resp = await fetch('https://api.xiaomimimo.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+    body
+  });
+
+  if (!resp.ok) {
+    const txt = await resp.text();
+    throw new Error(`API ${resp.status}: ${txt.substring(0, 180)}`);
+  }
+
+  const data = await resp.json();
+  console.log('RAW API response:', JSON.stringify(data).substring(0, 500));
+  const content = (data.choices?.[0]?.message?.content || '').trim();
+  console.log('Content extracted:', content.substring(0, 300));
+  if (!content) {
+    throw new Error('API return kosong. Struktur: ' + JSON.stringify(data).substring(0, 300));
+  }
+  const arr = parseJsonArray(content, texts.length);
+  if (arr.length !== texts.length) {
+    console.warn(`Jumlah elemen tidak sama: dapat ${arr.length}, harap ${texts.length}`);
+  }
+  return arr;
+}
+
+function setProgress(done, total, msg) {
+  state.doneUnits = done;
+  state.totalUnits = total;
+  const pct = total > 0 ? Math.round(done / total * 100) : 0;
+  document.getElementById('progBar').style.width = pct + '%';
+  document.getElementById('progText').textContent = msg;
+  document.getElementById('stPct').textContent = pct + '%';
+}
+
+async function startTranslation() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  const model = document.getElementById('modelSelect').value;
+  if (!apiKey) { showNotif('Masukkan API Key terlebih dahulu!', 'error'); return; }
+  if (!state.files.length) { showNotif('Belum ada file!', 'error'); return; }
+  if (state.translating) return;
+
+  state.translating = true;
+  document.getElementById('btnTranslate').disabled = true;
+  document.getElementById('progWrap').style.display = 'block';
+
+  // Count all units
+  let total = 0;
+  for (const f of state.files) {
+    if (!f.parsedData) continue;
+    for (const s of Object.values(f.parsedData.sheets)) {
+      total += s.toTranslate;
+    }
+  }
+  let done = 0;
+
+  const BATCH = parseInt(document.getElementById('batchSize').value) || 5;
+
+  for (let fi = 0; fi < state.files.length; fi++) {
+    const file = state.files[fi];
+    if (!file.parsedData) continue;
+    file.status = 'processing';
+    renderAll();
+
+    try {
+      for (const [sn, sd] of Object.entries(file.parsedData.sheets)) {
+        const toTrans = sd.entries.filter(e => !e.skip);
+        for (let b = 0; b < toTrans.length; b += BATCH) {
+          const batch = toTrans.slice(b, b + BATCH);
+          const texts = batch.map(e => e.original);
+          setProgress(done, total, `${file.name} — sheet "${sn}" — ${b}/${toTrans.length} baris (${done}/${total} total)...`);
+          try {
+            const results = await callMimo(texts, apiKey, model);
+            for (let k = 0; k < batch.length; k++) {
+              batch[k].translated = results[k] !== undefined ? postProcess(String(results[k])) : batch[k].original;
+              done++;
+            }
+          } catch (be) {
+            console.warn('Batch failed, keeping original:', be.message);
+            for (const e of batch) { e.translated = e.original; done++; }
+            showNotif(`⚠ Batch error: ${be.message.substring(0, 150)}`, 'error');
+          }
+          setProgress(done, total, `${file.name} — ${done}/${total} total selesai`);
+          await new Promise(r => setTimeout(r, 250));
+        }
+      }
+
+      // Write back to workbook
+      const wb = file.parsedData.wb;
+      for (const [sn, sd] of Object.entries(file.parsedData.sheets)) {
+        const ws = wb.Sheets[sn];
+        for (const e of sd.entries) {
+          if (!e.skip && e.translated !== null) {
+            const addr = XLSX.utils.encode_cell({ r: e.rowIndex, c: e.colIndex });
+            if (ws[addr]) { ws[addr].v = e.translated; ws[addr].t = 's'; delete ws[addr].w; }
+            else ws[addr] = { v: e.translated, t: 's' };
+          }
+        }
+      }
+
+      file.outBuffer = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+      file.status = 'done';
+
+    } catch (err) {
+      console.error(`File error ${file.name}:`, err);
+      file.status = 'error';
+      file.errorMsg = err.message;
+      showNotif(`Error: ${file.name} — ${err.message.substring(0, 100)}`, 'error');
+    }
+    renderAll();
+  }
+
+  setProgress(done, total, `✓ Selesai! ${done.toLocaleString()} baris diterjemahkan.`);
+  const doneCount = state.files.filter(f => f.status === 'done').length;
+  if (doneCount > 0) {
+    document.getElementById('btnZip').disabled = false;
+    showNotif(`✓ ${doneCount} file berhasil diterjemahkan ke Bahasa Indonesia!`, 'success');
+  }
+
+  state.translating = false;
+  document.getElementById('btnTranslate').disabled = false;
+  renderAll();
+  setTab('after');
+}
+
+// ===================== DOWNLOAD =====================
+function downloadOne(i) {
+  const f = state.files[i];
+  if (!f || !f.outBuffer) return;
+  triggerDownload(new Blob([f.outBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), f.name);
+}
+
+async function downloadZip() {
+  const done = state.files.filter(f => f.status === 'done' && f.outBuffer);
+  if (!done.length) { showNotif('Belum ada file yang selesai', 'error'); return; }
+  showNotif('Membuat ZIP...', 'info');
+  try {
+    const zip = new JSZip();
+    for (const f of done) zip.file(f.name, f.outBuffer);
+    const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+    triggerDownload(blob, 'hero-adventure-id-translations.zip');
+    showNotif(`✓ ZIP berhasil — ${done.length} file`, 'success');
+  } catch (e) {
+    showNotif('Gagal buat ZIP: ' + e.message, 'error');
+  }
+}
+
+function triggerDownload(blob, name) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+// ===================== NOTIFICATION =====================
+let notifTimer;
+function showNotif(msg, type) {
+  const el = document.getElementById('notif');
+  const dot = document.getElementById('notifDot');
+  document.getElementById('notifMsg').textContent = msg;
+  el.className = `notif show ${type}`;
+  dot.style.display = type === 'info' ? 'block' : 'none';
+  clearTimeout(notifTimer);
+  notifTimer = setTimeout(() => { el.className = `notif ${type}`; }, 5000);
+}
+
+// ===================== DRAG & DROP =====================
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+dz.addEventListener('drop', async e => {
+  e.preventDefault();
+  dz.classList.remove('drag-over');
+  const items = e.dataTransfer.items;
+  if (items) {
+    const proms = [];
+    for (const item of items) {
+      if (item.kind !== 'file') continue;
+      const entry = item.webkitGetAsEntry ? item.webkitGetAsEntry() : null;
+      if (entry?.isDirectory) proms.push(readDir(entry));
+      else { const f = item.getAsFile(); if (f?.name.endsWith('.xlsx')) proms.push(Promise.resolve([f])); }
+    }
+    const results = await Promise.all(proms);
+    const all = results.flat();
+    if (all.length) addFiles(all);
+    else showNotif('Tidak ada file XLSX ditemukan', 'info');
+  } else {
+    addFiles(e.dataTransfer.files);
+  }
+});
+
+function readDir(dirEntry) {
+  return new Promise(resolve => {
+    const reader = dirEntry.createReader();
+    const files = [];
+    function batch() {
+      reader.readEntries(entries => {
+        if (!entries.length) { resolve(files); return; }
+        const ps = [];
+        for (const e of entries) {
+          if (e.isDirectory) ps.push(readDir(e));
+          else if (e.name.endsWith('.xlsx')) ps.push(new Promise(r => e.file(f => r([f]))));
+        }
+        Promise.all(ps).then(rs => { files.push(...rs.flat()); batch(); });
+      });
+    }
+    batch();
+  });
+}
+
+document.getElementById('fileInput').addEventListener('change', e => addFiles(e.target.files));
+document.getElementById('folderInput').addEventListener('change', e => addFiles(e.target.files));
+</script>
+</body>
+</html>
